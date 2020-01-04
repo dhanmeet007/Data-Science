@@ -1,0 +1,399 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Election Poll Data Analysis\n",
+    "\n",
+    "In this project, we'll look at the opinion poll data from the upcoming 2016 General Election. In the process, we'll try to answer the following questions:\n",
+    "\n",
+    "- Who was being polled and what was their party affiliation?\n",
+    "- Did the poll results favour Clinton or Trump?\n",
+    "- How did voter sentiment change over time?\n",
+    "- Can we see an effect in the polls from the debates?\n",
+    "\n",
+    "So let's get started with the imports!"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 97,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "#Data Analysis imports\n",
+    "import pandas as pd\n",
+    "from pandas import Series,DataFrame\n",
+    "import numpy as np\n",
+    "\n",
+    "#Visualisation imports\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns\n",
+    "sns.set_style('whitegrid')\n",
+    "%matplotlib inline\n",
+    "\n",
+    "from __future__ import division\n",
+    "\n",
+    "#Imports to grab and parse data from the web\n",
+    "import requests\n",
+    "\n",
+    "from StringIO import StringIO"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We'll grab the poll data from _HuffPost Pollster_, and we'll use StringIO to prevent errors with pandas."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 98,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "#url for the poll data\n",
+    "url = \"http://elections.huffingtonpost.com/pollster/2016-general-election-trump-vs-clinton.csv\"\n",
+    "\n",
+    "#Using requests to get the data in text form\n",
+    "source = requests.get(url).text\n",
+    "\n",
+    "#Using String IO to prevent IO errors with pandas\n",
+    "poll_data = StringIO(source)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 99,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [],
+   "source": [
+    "#Reading the csv object into a pandas dataframe\n",
+    "poll_df = pd.read_csv(poll_data)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 100,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 1230 entries, 0 to 1229\n",
+      "Data columns (total 17 columns):\n",
+      "Pollster                  1230 non-null object\n",
+      "Start Date                1230 non-null object\n",
+      "End Date                  1230 non-null object\n",
+      "Entry Date/Time (ET)      1230 non-null object\n",
+      "Number of Observations    825 non-null float64\n",
+      "Population                1230 non-null object\n",
+      "Mode                      1230 non-null object\n",
+      "Trump                     1230 non-null float64\n",
+      "Clinton                   1230 non-null float64\n",
+      "Other                     819 non-null float64\n",
+      "Undecided                 1177 non-null float64\n",
+      "Pollster URL              1230 non-null object\n",
+      "Source URL                1230 non-null object\n",
+      "Partisan                  1230 non-null object\n",
+      "Affiliation               1230 non-null object\n",
+      "Question Text             506 non-null object\n",
+      "Question Iteration        1230 non-null int64\n",
+      "dtypes: float64(5), int64(1), object(11)\n",
+      "memory usage: 163.4+ KB\n"
+     ]
+    }
+   ],
+   "source": [
+    "poll_df.info()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 101,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>Pollster</th>\n",
+       "      <th>Start Date</th>\n",
+       "      <th>End Date</th>\n",
+       "      <th>Entry Date/Time (ET)</th>\n",
+       "      <th>Number of Observations</th>\n",
+       "      <th>Population</th>\n",
+       "      <th>Mode</th>\n",
+       "      <th>Trump</th>\n",
+       "      <th>Clinton</th>\n",
+       "      <th>Other</th>\n",
+       "      <th>Undecided</th>\n",
+       "      <th>Pollster URL</th>\n",
+       "      <th>Source URL</th>\n",
+       "      <th>Partisan</th>\n",
+       "      <th>Affiliation</th>\n",
+       "      <th>Question Text</th>\n",
+       "      <th>Question Iteration</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>Ipsos/Reuters</td>\n",
+       "      <td>2016-09-27</td>\n",
+       "      <td>2016-09-28</td>\n",
+       "      <td>2016-09-28T21:21:35Z</td>\n",
+       "      <td>1336.0</td>\n",
+       "      <td>Likely Voters</td>\n",
+       "      <td>Internet</td>\n",
+       "      <td>38.0</td>\n",
+       "      <td>42.0</td>\n",
+       "      <td>8.0</td>\n",
+       "      <td>12.0</td>\n",
+       "      <td>http://elections.huffingtonpost.com/pollster/p...</td>\n",
+       "      <td>http://big.assets.huffingtonpost.com/2016-Reut...</td>\n",
+       "      <td>Nonpartisan</td>\n",
+       "      <td>None</td>\n",
+       "      <td>If the 2016 presidential election were being h...</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>Ipsos/Reuters</td>\n",
+       "      <td>2016-09-27</td>\n",
+       "      <td>2016-09-28</td>\n",
+       "      <td>2016-09-28T21:21:35Z</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Likely Voters - Democrat</td>\n",
+       "      <td>Internet</td>\n",
+       "      <td>5.0</td>\n",
+       "      <td>81.0</td>\n",
+       "      <td>6.0</td>\n",
+       "      <td>8.0</td>\n",
+       "      <td>http://elections.huffingtonpost.com/pollster/p...</td>\n",
+       "      <td>http://big.assets.huffingtonpost.com/2016-Reut...</td>\n",
+       "      <td>Nonpartisan</td>\n",
+       "      <td>None</td>\n",
+       "      <td>If the 2016 presidential election were being h...</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>Ipsos/Reuters</td>\n",
+       "      <td>2016-09-27</td>\n",
+       "      <td>2016-09-28</td>\n",
+       "      <td>2016-09-28T21:21:35Z</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Likely Voters - Republican</td>\n",
+       "      <td>Internet</td>\n",
+       "      <td>78.0</td>\n",
+       "      <td>7.0</td>\n",
+       "      <td>7.0</td>\n",
+       "      <td>8.0</td>\n",
+       "      <td>http://elections.huffingtonpost.com/pollster/p...</td>\n",
+       "      <td>http://big.assets.huffingtonpost.com/2016-Reut...</td>\n",
+       "      <td>Nonpartisan</td>\n",
+       "      <td>None</td>\n",
+       "      <td>If the 2016 presidential election were being h...</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>Ipsos/Reuters</td>\n",
+       "      <td>2016-09-27</td>\n",
+       "      <td>2016-09-28</td>\n",
+       "      <td>2016-09-28T21:21:35Z</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>Likely Voters - independent</td>\n",
+       "      <td>Internet</td>\n",
+       "      <td>36.0</td>\n",
+       "      <td>22.0</td>\n",
+       "      <td>19.0</td>\n",
+       "      <td>23.0</td>\n",
+       "      <td>http://elections.huffingtonpost.com/pollster/p...</td>\n",
+       "      <td>http://big.assets.huffingtonpost.com/2016-Reut...</td>\n",
+       "      <td>Nonpartisan</td>\n",
+       "      <td>None</td>\n",
+       "      <td>If the 2016 presidential election were being h...</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>Morning Consult</td>\n",
+       "      <td>2016-09-26</td>\n",
+       "      <td>2016-09-27</td>\n",
+       "      <td>2016-09-28T16:28:22Z</td>\n",
+       "      <td>1253.0</td>\n",
+       "      <td>Likely Voters</td>\n",
+       "      <td>Internet</td>\n",
+       "      <td>41.0</td>\n",
+       "      <td>45.0</td>\n",
+       "      <td>NaN</td>\n",
+       "      <td>14.0</td>\n",
+       "      <td>http://elections.huffingtonpost.com/pollster/p...</td>\n",
+       "      <td>https://morningconsult.com/2016/09/28/clinton-...</td>\n",
+       "      <td>Nonpartisan</td>\n",
+       "      <td>None</td>\n",
+       "      <td>If the 2016 presidential election were held to...</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "          Pollster  Start Date    End Date  Entry Date/Time (ET)  \\\n",
+       "0    Ipsos/Reuters  2016-09-27  2016-09-28  2016-09-28T21:21:35Z   \n",
+       "1    Ipsos/Reuters  2016-09-27  2016-09-28  2016-09-28T21:21:35Z   \n",
+       "2    Ipsos/Reuters  2016-09-27  2016-09-28  2016-09-28T21:21:35Z   \n",
+       "3    Ipsos/Reuters  2016-09-27  2016-09-28  2016-09-28T21:21:35Z   \n",
+       "4  Morning Consult  2016-09-26  2016-09-27  2016-09-28T16:28:22Z   \n",
+       "\n",
+       "   Number of Observations                   Population      Mode  Trump  \\\n",
+       "0                  1336.0                Likely Voters  Internet   38.0   \n",
+       "1                     NaN     Likely Voters - Democrat  Internet    5.0   \n",
+       "2                     NaN   Likely Voters - Republican  Internet   78.0   \n",
+       "3                     NaN  Likely Voters - independent  Internet   36.0   \n",
+       "4                  1253.0                Likely Voters  Internet   41.0   \n",
+       "\n",
+       "   Clinton  Other  Undecided  \\\n",
+       "0     42.0    8.0       12.0   \n",
+       "1     81.0    6.0        8.0   \n",
+       "2      7.0    7.0        8.0   \n",
+       "3     22.0   19.0       23.0   \n",
+       "4     45.0    NaN       14.0   \n",
+       "\n",
+       "                                        Pollster URL  \\\n",
+       "0  http://elections.huffingtonpost.com/pollster/p...   \n",
+       "1  http://elections.huffingtonpost.com/pollster/p...   \n",
+       "2  http://elections.huffingtonpost.com/pollster/p...   \n",
+       "3  http://elections.huffingtonpost.com/pollster/p...   \n",
+       "4  http://elections.huffingtonpost.com/pollster/p...   \n",
+       "\n",
+       "                                          Source URL     Partisan Affiliation  \\\n",
+       "0  http://big.assets.huffingtonpost.com/2016-Reut...  Nonpartisan        None   \n",
+       "1  http://big.assets.huffingtonpost.com/2016-Reut...  Nonpartisan        None   \n",
+       "2  http://big.assets.huffingtonpost.com/2016-Reut...  Nonpartisan        None   \n",
+       "3  http://big.assets.huffingtonpost.com/2016-Reut...  Nonpartisan        None   \n",
+       "4  https://morningconsult.com/2016/09/28/clinton-...  Nonpartisan        None   \n",
+       "\n",
+       "                                       Question Text  Question Iteration  \n",
+       "0  If the 2016 presidential election were being h...                   1  \n",
+       "1  If the 2016 presidential election were being h...                   1  \n",
+       "2  If the 2016 presidential election were being h...                   1  \n",
+       "3  If the 2016 presidential election were being h...                   1  \n",
+       "4  If the 2016 presidential election were held to...                   1  "
+      ]
+     },
+     "execution_count": 101,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "poll_df.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Who was being polled and what was their party affiliation?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Quickly visualising the affiliations of the different pollsters."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 102,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<seaborn.axisgrid.FacetGrid at 0x119021cd0>"
+      ]
+     },
+     "execution_count": 102,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<matplotlib.figure.Figure at 0x119021e10>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "sns.factorplot('Affiliation',data=poll_df,kind='count')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Most of the polls have no affiliation; though there's stronger affiliation for Democrats than for Republicans."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 103,
+   "metadata": {
+    "collapsed": false
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "<seaborn.axisgrid.FacetGrid at 0x11904ff10>"
+      ]
+     },
+     "execution_count": 103,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<matplotlib.figure.Figure at 0x1166db1d0>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "sns.factorplot('Affiliation',data=poll_df,hue='Population',kind='count')"
+   ]
+  },
